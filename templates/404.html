@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Страница не найдена</title>
+
+    {% load static %}
+
+    <!-- Подключение Bootstrap для стилей -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        /* АНИМАЦИЯ 404 - добавляет эффект при наведении на заголовок */
+        h1 {
+            transition: transform 0.3s;
+        }
+
+        h1:hover {
+            transform: scale(1.1) rotate(-2deg);
+        }
+
+        /* ПЛАВНОЕ ПЕРЕКЛЮЧЕНИЕ ТЕМЫ - для анимации изменения фона и цвета текста */
+        body {
+            transition: all 0.5s ease;
+        }
+
+        /* ХОВЕР КНОПКИ - эффект при наведении на кнопки */
+        button:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        /* CANVAS ФОН - стили для Matrix фона */
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            display: none;
+        }
+
+        /* СТИЛИ ДЛЯ КУРСОРА В ТЕРМИНАЛЕ */
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            background: #00ff88;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ОСНОВНОЙ КОНТЕЙНЕР СТРАНИЦЫ -->
+    <div class="d-flex align-items-center justify-content-center vh-100">
+        <div class="text-center">
+            <!-- ЗАГОЛОВОК ОШИБКИ -->
+            <h1 class="display-1 fw-bold">404</h1>
+
+            <!-- ПОДЗАГОЛОВОК -->
+            <h3 class="mb-3">Страница не найдена 😢</h3>
+
+            <!-- ОПИСАНИЕ ОШИБКИ -->
+            <p class="text-muted">
+                Возможно, ты перешёл по неправильной ссылке
+            </p>
+
+            <!-- КНОПКА ВОЗВРАТА НА ГЛАВНУЮ -->
+            <a href="{% url 'product_list' %}" class="btn btn-outline-dark mt-3">
+                Вернуться на главную
+            </a>
+
+            <!-- СЕКРЕТНАЯ КНОПКА ДЛЯ АКТИВАЦИИ MATRIX -->
+            <button onclick="activateSecret()"
+                    class="btn btn-outline-dark mt-3"
+                    style="opacity: 0.6;">
+                SECRET
+            </button>
+
+            <!-- КОНТЕЙНЕР ДЛЯ ФЕЙКОВОГО ТЕРМИНАЛА -->
+            <div id="terminal"
+                 class="mt-4 text-start"
+                 style="max-width: 400px; margin: auto;">
+            </div>
+        </div>
+    </div>
+
+    <!-- CANVAS ДЛЯ MATRIX АНИМАЦИИ -->
+    <canvas id="matrixCanvas"></canvas>
+
+    <!-- АУДИО ФАЙЛ ДЛЯ ЗВУКА ПЕЧАТИ -->
+    <audio src="{% static 'sounds/matrix.mp3' %}" id="typingSound"></audio>
+
+   <script>
+    // Флаг чтобы не запускать матрицу много раз
+    let matrixStarted = false;
+
+    // 🔥 ГЛАВНАЯ ФУНКЦИЯ АКТИВАЦИИ СЕКРЕТНОГО РЕЖИМА
+    function activateSecret() {
+
+        // защита от повторного запуска
+        if (matrixStarted) return;
+        matrixStarted = true;
+
+        // Меняем тему на тёмную с зелёным текстом
+        document.body.style.background = "#000";
+        document.body.style.color = "#00ff88";
+
+        // Запускаем фейковый терминал
+        startTerminal();
+
+        // Получаем canvas элемент и отображаем его
+        const canvas = document.getElementById("matrixCanvas");
+        canvas.style.display = "block";
+
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+
+        for (let i = 0; i < columns; i++) {
+            drops[i] = 1;
+        }
+
+        function draw() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#00ff88";
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters.charAt(
+                    Math.floor(Math.random() * letters.length)
+                );
+
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (
+                    drops[i] * fontSize > canvas.height &&
+                    Math.random() > 0.975
+                ) {
+                    drops[i] = 0;
+                }
+
+                drops[i]++;
+            }
+        }
+
+        setInterval(draw, 35);
+    }
+
+    // 💻 ФУНКЦИЯ ЗАПУСКА ФЕЙКОВОГО ТЕРМИНАЛА
+    function startTerminal() {
+
+        const terminal = document.getElementById("terminal");
+        const sound = document.getElementById("typingSound");
+
+        // делаем звук тише
+        sound.volume = 0.2;
+
+        const lines = [
+            "> accessing server...",
+            "> bypassing security...",
+            "> injecting payload...",
+            "> ERROR 404 NOT FOUND",
+            "> redirect failed...",
+            "> system compromised"
+        ];
+
+        let i = 0;
+
+        function typeLine() {
+            if (i < lines.length) {
+
+                const line = document.createElement("div");
+
+                // добавляем курсор
+                line.innerHTML = '<span class="cursor"></span>';
+
+                terminal.appendChild(line);
+
+                let text = lines[i];
+                let j = 0;
+
+                function typeChar() {
+                    if (j < text.length) {
+
+                        // текст + курсор
+                        line.innerHTML = text.slice(0, j + 1) + '<span class="cursor"></span>';
+
+                        // звук не на каждый символ
+                        if (j % 2 === 0) {
+                            sound.currentTime = 0;
+                            sound.play().catch(() => {});
+                        }
+
+                        j++;
+                        setTimeout(typeChar, 30);
+                    }
+                }
+
+                typeChar();
+
+                i++;
+                setTimeout(typeLine, 600);
+            }
+        }
+
+        typeLine();
+    }
+</script>
+</body>
+</html>
