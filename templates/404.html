@@ -103,43 +103,51 @@
     // 🔥 ГЛАВНАЯ ФУНКЦИЯ АКТИВАЦИИ СЕКРЕТНОГО РЕЖИМА
     function activateSecret() {
 
-        // защита от повторного запуска
+        // ⚡ Защита от повторного запуска функции
         if (matrixStarted) return;
         matrixStarted = true;
 
-        // Меняем тему на тёмную с зелёным текстом
+        // 🌑 Меняем тему на тёмную - чёрный фон и зелёный текст (как в Matrix)
         document.body.style.background = "#000";
         document.body.style.color = "#00ff88";
 
-        // Запускаем фейковый терминал
+        // 💻 Запускаем фейковый терминал с печатью текста и звуком
         startTerminal();
 
-        // Получаем canvas элемент и отображаем его
+        // 🎬 Получаем canvas элемент и отображаем его для Matrix анимации
         const canvas = document.getElementById("matrixCanvas");
         canvas.style.display = "block";
 
         const ctx = canvas.getContext("2d");
 
+        // 📐 Устанавливаем размер canvas на полный размер экрана
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        // 🔤 Символы которые будут падать как в фильме Matrix
         const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         const fontSize = 14;
+        // 📊 Вычисляем количество столбцов для падающих символов
         const columns = canvas.width / fontSize;
 
         const drops = [];
 
+        // Инициализируем начальные позиции для каждой капли символов Matrix
         for (let i = 0; i < columns; i++) {
             drops[i] = 1;
         }
 
+        // Функция рисования анимации Matrix - непрерывно перерисовывает сцену с падающими символами
         function draw() {
+            // Полупрозрачный чёрный фон для эффекта следа
             ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Устанавливаем зелёный цвет и шрифт для символов Matrix
             ctx.fillStyle = "#00ff88";
             ctx.font = fontSize + "px monospace";
 
+            // Рисуем случайные символы для каждого столбца
             for (let i = 0; i < drops.length; i++) {
                 const text = letters.charAt(
                     Math.floor(Math.random() * letters.length)
@@ -147,6 +155,7 @@
 
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
+                // Если капля упала вниз - сбрасываем её вверх
                 if (
                     drops[i] * fontSize > canvas.height &&
                     Math.random() > 0.975
@@ -154,6 +163,7 @@
                     drops[i] = 0;
                 }
 
+                // Переместить каплю вниз
                 drops[i]++;
             }
         }
@@ -167,9 +177,11 @@
         const terminal = document.getElementById("terminal");
         const sound = document.getElementById("typingSound");
 
-        // делаем звук тише
+        // Устанавливаем громкость звука на 20% и убираем автоматическое воспроизведение
         sound.volume = 0.2;
+        sound.autoplay = false;
 
+        // Список команд (строк) которые будут "печаться" в терминал
         const lines = [
             "> accessing server...",
             "> bypassing security...",
@@ -181,12 +193,13 @@
 
         let i = 0;
 
+        // Функция добавления новой строки текста
         function typeLine() {
             if (i < lines.length) {
 
                 const line = document.createElement("div");
 
-                // добавляем курсор
+                // Добавляем мигающий курсор в начало строки
                 line.innerHTML = '<span class="cursor"></span>';
 
                 terminal.appendChild(line);
@@ -194,16 +207,19 @@
                 let text = lines[i];
                 let j = 0;
 
+                // Функция печати символа за символом
                 function typeChar() {
                     if (j < text.length) {
 
-                        // текст + курсор
+                        // Выводим текст + курсор после последнего символа
                         line.innerHTML = text.slice(0, j + 1) + '<span class="cursor"></span>';
 
-                        // звук не на каждый символ
+                        // Воспроизводим звук - не на каждый символ, а через 2 символа
                         if (j % 2 === 0) {
                             sound.currentTime = 0;
-                            sound.play().catch(() => {});
+                            sound.play().catch((error) => {
+                                console.log("🔊 Звук не может быть воспроизведён:", error);
+                            });
                         }
 
                         j++;
@@ -211,13 +227,16 @@
                     }
                 }
 
+                // Запускаем печать символов для текущей строки
                 typeChar();
 
                 i++;
+                // Переходим к следующей строке после паузы
                 setTimeout(typeLine, 600);
             }
         }
 
+        // Начинаем печать строк
         typeLine();
     }
 </script>
